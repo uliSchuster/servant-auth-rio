@@ -1,0 +1,4 @@
+{
+    "brittany.showErrorNotification": true,
+    "haskell.formattingProvider": "brittany"
+}
