@@ -3,6 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Main where
 
@@ -11,6 +12,8 @@ import           RIO
 import           Servant                        ( Context(..) )
 import qualified Servant                       as SV
 import qualified Servant.Auth.Server           as AS
+import qualified Servant.Auth.Server.Internal.AddSetCookie
+                                               as ASC
 import qualified Network.Wai.Handler.Warp      as Warp
 import qualified RIO.Time                      as T
 import           Control.Monad.Except           ( ExceptT(..) )
@@ -18,6 +21,10 @@ import           Control.Monad.Except           ( ExceptT(..) )
 
 import           Api
 import           Server
+
+-- Workaround https://github.com/haskell-servant/servant-auth/issues/177
+type instance ASC.AddSetCookieApi (SV.NoContentVerb 'SV.DELETE)
+  = SV.Verb 'SV.DELETE 204 '[SV.JSON] (ASC.AddSetCookieApiVerb SV.NoContent)
 
 -- Configuration environment to be threaded through the entire application.
 -- Placeholder for the present experimental app.

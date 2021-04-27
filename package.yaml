@@ -28,6 +28,9 @@ dependencies:
 - wai
 - warp
 - mtl
+- tagged
+- http-types
+- bytestring
 
 ghc-options:
 # Recommended options from https://github.com/commercialhaskell/rio#monads

@@ -11,7 +11,10 @@ The [Servant.Auth Package](https://github.com/haskell-servant/servant-auth) prov
 When serving a protected API, an authentication function must be provided as server _context_.
 When using a custom handler monad, the context must be hoisted together with the custom monad: Instead of `hoistServer`, Servant provides the function `hoistServerWithContext` to this end.
 
-In the present minimal example, I worked out for myself how to hoist a RIO handler monad in a Servant server with authentication context.
+In the present minimal example, I came across two problems, with solutions by helpful comunnity members:
+
+- For a complex API with multiple endpoints combined via Servant's `:<|>` type combinator, the return type is a combination of the individual endpoint return types. If instead of returning a value the authentication check throws an error, this must also be a combination of errors, one for each endpoint. Servant provides the [throwAll](http://hackage.haskell.org/package/servant-auth-server-0.4.6.0/docs/Servant-Auth-Server.html#v:throwAll) helper function (from the [ThrowAll](https://hackage.haskell.org/package/servant-auth-server-0.4.6.0/docs/Servant-Auth-Server.html#t:ThrowAll) type class). With RIO as handler monad, the helper function does not work because RIO does not have an instance of the `MonadError` typeclass. To alleviate this problem, [danidiaz](https://stackoverflow.com/users/1364288/danidiaz) provided the `RIOThworAll` type class with the `rioThrowAll` helper, as discussed in [this](https://stackoverflow.com/questions/67262209/deny-authentication-in-servant-auth-with-rio) post on StackOverflow.
+- Because of some limitation in the Servant base package (see issue [#1267](https://github.com/haskell-servant/servant/issues/1267)), Servant-Auth currently cannot return headers for a HTTP 204 (No Content) response (see servant-auth issue [#177](https://github.com/haskell-servant/servant-auth/issues/177)). Authentication requires Cookie and X-CSRF headers, though. A workaround suggested in the above issue is to provide an instance for the particular NoContent verbs needed, as discussed in [this](https://stackoverflow.com/questions/67270239/serving-a-servant-nocontent-response-with-rio) StackOverflow post.
 
 ## Resources
 

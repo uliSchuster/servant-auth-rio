@@ -10,6 +10,7 @@ module Api
   , User(..)
   , LoginEndpoint
   , ProtectedEndpoint
+  , UnprotectedEndpoint
   , Api
   , CookieHeader
   )
@@ -56,8 +57,13 @@ type CookieHeader
 type LoginEndpoint
   = "login" :> SV.ReqBody '[SV.JSON] Login :> SV.Verb 'SV.POST 204 '[SV.JSON] CookieHeader
 
--- An endpoint that requries authentication.
-type ProtectedEndpoint = "protected" :> SV.Get '[SV.JSON] Text
+-- An unprotected endpoint
+type UnprotectedEndpoint
+  = "unprotected" :> (SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent)
+
+-- An endpoint that requires authentication.
+type ProtectedEndpoint = "protected" :> (SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent)
 
 -- The overall API, with cookie authentication on the protected endpoint
-type Api = LoginEndpoint :<|> (AS.Auth '[AS.Cookie] User :> ProtectedEndpoint)
+type Api
+  = LoginEndpoint :<|> UnprotectedEndpoint :<|> (AS.Auth '[AS.Cookie] User :> ProtectedEndpoint)
