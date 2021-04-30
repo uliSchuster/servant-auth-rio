@@ -4,7 +4,9 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Server
-  ( apiProxy
+  ( HasCookieConfig(..)
+  , HasJwtConfig(..)
+  , apiProxy
   , contextProxy
   , server
   )
@@ -15,9 +17,18 @@ import qualified Servant                       as SV
 import qualified Servant.Auth.Server           as AS
 
 import           RIO
-import RIOThrowAll
+import           RIOThrowAll
 
 import           Api
+
+
+-- The server requires the cookie configuration to be passed along in the environment
+class HasCookieConfig config where
+  cookieConfigL :: Lens' config AS.CookieSettings
+
+-- The server requires the JWT configuration to be passed along in the environment
+class HasJwtConfig config where
+    jwtConfigL :: Lens' config AS.JWTSettings
 
 apiProxy :: Proxy Api
 apiProxy = Proxy
@@ -27,27 +38,36 @@ contextProxy = Proxy
 
 -- | The server responsible for the `login` endpoint.
 loginServer
-  :: AS.CookieSettings -> AS.JWTSettings -> SV.ServerT LoginEndpoint (RIO m)
+  :: (HasCookieConfig env, HasJwtConfig env, HasLogFunc env)
+  => SV.ServerT LoginEndpoint (RIO env)
 loginServer = login
 
 -- | A very much simplified login check that authenticates a single user only.
-login :: AS.CookieSettings -> AS.JWTSettings -> Login -> RIO m CookieHeader
-login cookieSettings jwtSettings (Login "uliSchuster" "uli") = do
+login
+  :: (HasCookieConfig env, HasJwtConfig env, HasLogFunc env)
+  => Login
+  -> RIO env CookieHeader
+login (Login "uliSchuster" "uli") = do
+  cc <- view cookieConfigL
+  jc <- view jwtConfigL
+  logDebug "Authenticating user uliSchuster"
   let usr = User "uliSchuster" "ulrich.schuster@koing.de"
-  mApplyCookies <- liftIO $ AS.acceptLogin cookieSettings jwtSettings usr
+  mApplyCookies <- liftIO $ AS.acceptLogin cc jc usr
   case mApplyCookies of
     Nothing           -> throwIO SV.err401
     Just applyCookies -> return $ applyCookies SV.NoContent
-login _ _ _ = throwIO SV.err401
+login _ = do
+  logDebug "Not authenticated"
+  throwIO SV.err401
 
 
 -- | The server for the `unprotected` endpoint.
-unprotectedServer :: SV.ServerT UnprotectedEndpoint (RIO m)
+unprotectedServer :: SV.ServerT UnprotectedEndpoint (RIO env)
 unprotectedServer = return "This is unprotected" :<|> return SV.NoContent
 
 -- | The server for the `protected` endpoint.
 -- This server receives the result of the cookie-based authentication combinator.
-protectedServer :: AS.AuthResult User -> SV.ServerT ProtectedEndpoint (RIO m)
+protectedServer :: AS.AuthResult User -> SV.ServerT ProtectedEndpoint (RIO env)
 -- If we get an "Authenticated v", we can trust the information in v, since
 -- it was signed by a key we trust.
 protectedServer (AS.Authenticated _) =
@@ -57,5 +77,7 @@ protectedServer (AS.Authenticated _) =
 protectedServer _ = rioThrowAll SV.err401 --throwIO SV.err401 :<|> throwIO SV.err401
 
 -- | The overall server for all endpoints.
-server :: AS.CookieSettings -> AS.JWTSettings -> SV.ServerT Api (RIO m)
-server cs jwt = loginServer cs jwt :<|> unprotectedServer :<|> protectedServer
+server
+  :: (HasCookieConfig env, HasJwtConfig env, HasLogFunc env)
+  => SV.ServerT Api (RIO env)
+server = loginServer :<|> unprotectedServer :<|> protectedServer
