@@ -6,8 +6,8 @@
 module Server
   ( HasCookieConfig(..)
   , HasJwtConfig(..)
-  , apiProxy
   , contextProxy
+  , login
   , server
   )
 where
@@ -29,9 +29,6 @@ class HasCookieConfig config where
 -- The server requires the JWT configuration to be passed along in the environment
 class HasJwtConfig config where
     jwtConfigL :: Lens' config AS.JWTSettings
-
-apiProxy :: Proxy Api
-apiProxy = Proxy
 
 contextProxy :: Proxy '[AS.CookieSettings, AS.JWTSettings]
 contextProxy = Proxy

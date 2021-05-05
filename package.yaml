@@ -62,8 +62,8 @@ tests:
     main: Test.hs
     source-dirs:
       - test
-      - src
     dependencies:
+      - servantauth
       - tasty
       - tasty-hunit
       - tasty-hspec
@@ -74,3 +74,6 @@ tests:
       - quickcheck-text
       - checkers
       - hspec
+      - servant-client
+      - servant-auth-client
+      - http-client

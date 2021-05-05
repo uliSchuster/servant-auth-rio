@@ -29,7 +29,7 @@ hoistAppServer
   :: (S.HasCookieConfig env, S.HasJwtConfig env, HasLogFunc env)
   => env
   -> SV.Server Api
-hoistAppServer env = SV.hoistServerWithContext S.apiProxy
+hoistAppServer env = SV.hoistServerWithContext Api.apiProxy
                                                S.contextProxy
                                                (nt env)
                                                S.server
@@ -48,4 +48,4 @@ myApp
   => AuthContext
   -> env
   -> Wai.Application
-myApp ctx env = SV.serveWithContext S.apiProxy ctx $ hoistAppServer env
+myApp ctx env = SV.serveWithContext Api.apiProxy ctx $ hoistAppServer env

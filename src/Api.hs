@@ -13,6 +13,7 @@ module Api
   , UnprotectedEndpoint
   , Api
   , CookieHeader
+  , apiProxy
   )
 where
 
@@ -32,6 +33,7 @@ data Login = Login
   deriving (Eq, Show, Generic)
 
 instance J.FromJSON Login
+instance J.ToJSON Login
 
 -- Authentication cookie contents
 data User = User
@@ -62,8 +64,11 @@ type UnprotectedEndpoint
   = "unprotected" :> (SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent)
 
 -- An endpoint that requires authentication.
-type ProtectedEndpoint = "protected" :> (SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent)
+type ProtectedEndpoint = "protected" :> SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent
 
 -- The overall API, with cookie authentication on the protected endpoint
 type Api
-  = LoginEndpoint :<|> UnprotectedEndpoint :<|> (AS.Auth '[AS.Cookie] User :> ProtectedEndpoint)
+  = LoginEndpoint :<|> UnprotectedEndpoint :<|> (AS.Auth '[AS.Cookie, AS.JWT] User :> ProtectedEndpoint)
+
+apiProxy :: Proxy Api
+apiProxy = Proxy
