@@ -10,6 +10,7 @@ where
 import qualified Servant                       as SV
 import qualified Servant.Auth.Server           as AS
 import qualified RIO.Time                      as T
+import qualified Network.HTTP.Client           as HC
 
 import           RIO
 import           Server
@@ -19,8 +20,15 @@ import           Server
 data Env = Env
   { cookieConfig :: AS.CookieSettings
   , jwtConfig :: AS.JWTSettings
-  , logger :: !LogFunc
+  , logger :: LogFunc
+  , cookieJar :: TVar HC.CookieJar
   , someConfig :: Text }
+
+class HasCookieJar config where
+  cookieJarL :: Lens' config (TVar HC.CookieJar)
+
+instance HasCookieJar Env where
+  cookieJarL = lens cookieJar (\x y -> x { cookieJar = y })
 
 instance HasCookieConfig Env where
   cookieConfigL = lens cookieConfig (\x y -> x { cookieConfig = y })

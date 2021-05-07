@@ -77,3 +77,8 @@ tests:
       - servant-client
       - servant-auth-client
       - http-client
+    ghc-options: # Run tests with +RTS -xc option to enable stack trace printing.
+      - -prof
+      - -fprof-auto
+      - -fprof-cafs
+      - -ferror-spans

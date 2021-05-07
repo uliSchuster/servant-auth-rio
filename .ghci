@@ -1,0 +1,5 @@
+:seti -XNoImplicitPrelude
+:seti -XOverloadedStrings
+:seti -XDataKinds
+:seti -XDeriveGeneric
+:seti -XTypeOperators

@@ -64,7 +64,8 @@ type UnprotectedEndpoint
   = "unprotected" :> (SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent)
 
 -- An endpoint that requires authentication.
-type ProtectedEndpoint = "protected" :> SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent
+type ProtectedEndpoint
+  = "protected" :> SV.Get '[SV.JSON] Text :<|> SV.DeleteNoContent
 
 -- The overall API, with cookie authentication on the protected endpoint
 type Api
